@@ -14,14 +14,34 @@ class ViewController: UIViewController {
     @IBOutlet weak var tableView: UITableView!
     
     var infos: InfoStruct?
+    lazy var refresher: UIRefreshControl = {
+        let refreshControl = UIRefreshControl()
+        refreshControl.tintColor = .black
+        refreshControl.addTarget(self, action: #selector(refreshData), for: .valueChanged)
+        
+        return refreshControl
+    }()
     
      let url = URL(string: "https://api.flickr.com/services/feeds/photos_public.gne?format=json&nojsoncallback=1")
     
     override func viewDidLoad() {
         super.viewDidLoad()
         downloadJson()
+        tableView.refreshControl = refresher
     }
     
+    
+    @objc
+    func refreshData() {
+       
+        self.downloadJson()
+        
+        let timeOut = DispatchTime.now() + .milliseconds(3000)
+        DispatchQueue.main.asyncAfter(deadline: timeOut) {
+            
+            self.refresher.endRefreshing()
+        }
+    }
     
     func downloadJson() {
         guard let downloadURL = url else { return }
